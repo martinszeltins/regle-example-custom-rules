@@ -27,6 +27,10 @@
                     Toggle Condition
                 </button> <span @click="condition = !condition">{{ condition }}</span>
             </div>
+
+            <div v-if="isFormValid" class="mt-4 text-green-600">
+                Form is valid!
+            </div>
         </form>
     </div>
 </template>
@@ -38,12 +42,19 @@
     import { useRegle, createRule, type Maybe, type RegleComputedRules } from '@regle/core'
 
     const condition = ref(true)
+    const isFormValid = ref(false)
 
     const form = ref({
         firstName: '',
         lastName: ''
     })
 
+    /**
+     * It is recommended to create custom rules using the `createRule` function
+     * instead of an inline function. It automatically tracks reactive
+     * dependencies and allows you to add custom `active` behavior
+     * to the rule.
+     */
     const customRule = createRule({
         validator(value: Maybe<string>, minLength: number, condition: boolean) {
             return ruleHelpers.isFilled(value) && value.length >= minLength && condition === true
@@ -68,7 +79,13 @@
 
     const { r$ } = useRegle(form, rules, { autoDirty: false })
 
-    const submit = () => {
-        r$.$validate()
+    const submit = async () => {
+        isFormValid.value = false
+
+        const { result } = await r$.$validate()
+
+        if (result) {
+            isFormValid.value = true
+        }
     }
 </script>
